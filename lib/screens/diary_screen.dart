@@ -6,6 +6,7 @@ import '../themes/app_colors.dart';
 import '../utils/color_utils.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/session_card.dart';
+import 'create_workout_sheet.dart';
 import 'log_workout_sheet.dart';
 
 class DiaryScreen extends StatefulWidget {
@@ -63,9 +64,9 @@ class _DiaryScreenState extends State<DiaryScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (var i = 0; i < meta.workouts.length; i++)
+            for (var i = 0; i < provider.allWorkouts.length; i++)
               _FilterChip(
-                label: meta.workouts[i].name.replaceFirst('Тренировка', 'Тр.'),
+                label: provider.allWorkouts[i].name.replaceFirst('Тренировка', 'Тр.'),
                 selected: _workoutFilter == i,
                 onTap: () => setState(() => _workoutFilter = _workoutFilter == i ? null : i),
               ),
@@ -75,6 +76,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 selected: _groupFilter == g.id,
                 onTap: () => setState(() => _groupFilter = _groupFilter == g.id ? '' : g.id),
               ),
+            _FilterChip(
+              label: '+ Тренировка',
+              selected: false,
+              onTap: () => openCreateWorkoutSheet(context),
+            ),
           ],
         ),
         const SizedBox(height: 16),
