@@ -64,8 +64,8 @@ type SessionDTO struct {
 	SetsCount    int        `json:"setsCount"`
 }
 
-func entryToDTO(e models.Entry) EntryDTO {
-	ex := catalog.ExerciseByID(e.ExerciseID)
+func entryToDTO(e models.Entry, cat catalog.Catalog) EntryDTO {
+	ex := cat.ExerciseByID(e.ExerciseID)
 	dto := EntryDTO{ExerciseID: e.ExerciseID, Notes: e.Notes}
 	sets := make([]SetDTO, 0, len(e.Sets))
 	for _, s := range e.Sets {
@@ -83,18 +83,18 @@ func entryToDTO(e models.Entry) EntryDTO {
 	return dto
 }
 
-func sessionToDTO(s models.Session, all []models.Session) SessionDTO {
+func sessionToDTO(s models.Session, all []models.Session, cat catalog.Catalog) SessionDTO {
 	entries := make([]EntryDTO, 0, len(s.Entries))
 	for _, e := range s.Entries {
-		entries = append(entries, entryToDTO(e))
+		entries = append(entries, entryToDTO(e, cat))
 	}
-	score := services.PerfScore(all, s)
+	score := services.PerfScore(all, s, cat)
 	dto := SessionDTO{
 		ID:           s.ID,
 		Date:         s.Date,
 		WorkoutIdx:   s.WorkoutIdx,
-		WorkoutName:  workoutName(s.WorkoutIdx),
-		WorkoutColor: catalog.WorkoutColor(s.WorkoutIdx),
+		WorkoutName:  workoutName(s.WorkoutIdx, cat),
+		WorkoutColor: cat.WorkoutColor(s.WorkoutIdx),
 		Duration:     s.Duration,
 		RPE:          s.RPE,
 		Notes:        s.Notes,
@@ -102,7 +102,7 @@ func sessionToDTO(s models.Session, all []models.Session) SessionDTO {
 		Entries:      entries,
 		Score:        score,
 		ScoreColor:   services.ScoreColor(score),
-		Volume:       services.SessionVolume(s),
+		Volume:       services.SessionVolume(s, cat),
 		SetsCount:    services.SessionSets(s),
 	}
 	if s.Mood != nil && *s.Mood >= 0 && *s.Mood < len(catalog.Moods) {
@@ -123,11 +123,11 @@ func sessionToDTO(s models.Session, all []models.Session) SessionDTO {
 	return dto
 }
 
-func workoutName(idx int) string {
-	if idx < 0 || idx >= len(catalog.Workouts) {
+func workoutName(idx int, cat catalog.Catalog) string {
+	if idx < 0 || idx >= len(cat.Workouts) {
 		return ""
 	}
-	return catalog.Workouts[idx].Name
+	return cat.Workouts[idx].Name
 }
 
 type GoalDTO struct {
@@ -140,8 +140,8 @@ type GoalDTO struct {
 	Pct          int     `json:"pct"`
 }
 
-func goalToDTO(g models.Goal, sessions []models.Session) GoalDTO {
-	ex := catalog.ExerciseByID(g.ExerciseID)
+func goalToDTO(g models.Goal, sessions []models.Session, cat catalog.Catalog) GoalDTO {
+	ex := cat.ExerciseByID(g.ExerciseID)
 	name := ""
 	if ex != nil {
 		name = ex.Name
@@ -196,7 +196,6 @@ type BodyweightDTO struct {
 type SettingsDTO struct {
 	Name       string          `json:"name"`
 	Tourney    string          `json:"tourney"`
-	Demo       bool            `json:"demo"`
 	Bodyweight []BodyweightDTO `json:"bodyweight"`
 }
 
@@ -235,7 +234,6 @@ type DashboardDTO struct {
 	Bodyweight        []BodyweightDTO  `json:"bodyweight"`
 	WeeklyTonnage     []WeekPointDTO   `json:"weeklyTonnage"`
 	RecentSessions    []SessionDTO     `json:"recentSessions"`
-	IsDemo            bool             `json:"isDemo"`
 }
 
 type PRDTO struct {
@@ -288,6 +286,18 @@ type CreateGoalRequest struct {
 	ExerciseID string  `json:"exId"`
 	Arm        string  `json:"arm"`
 	Target     float64 `json:"target"`
+}
+
+type CreateExerciseRequest struct {
+	Name  string `json:"name"`
+	Group string `json:"group"`
+	Unit  string `json:"unit"`
+}
+
+type CreateWorkoutRequest struct {
+	Name        string   `json:"name"`
+	ExerciseIDs []string `json:"exerciseIds"`
+	Color       string   `json:"color"`
 }
 
 type UpdateSettingsRequest struct {
