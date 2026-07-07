@@ -1,5 +1,7 @@
 package models
 
+import "armforge/internal/catalog"
+
 type Set struct {
 	Arm    string  `json:"arm"`
 	Weight float64 `json:"weight"`
@@ -38,11 +40,12 @@ type Goal struct {
 }
 
 type AppState struct {
-	Name     string       `json:"name"`
-	Cursor   int          `json:"cursor"`
-	Sessions []Session    `json:"sessions"`
-	BW       []Bodyweight `json:"bw"`
-	Goals    []Goal       `json:"goals"`
-	Tourney  string       `json:"tourney"`
-	Demo     bool         `json:"demo"`
+	Name            string             `json:"name"`
+	Cursor          int                `json:"cursor"`
+	Sessions        []Session          `json:"sessions"`
+	BW              []Bodyweight       `json:"bw"`
+	Goals           []Goal             `json:"goals"`
+	Tourney         string             `json:"tourney"`
+	CustomExercises []catalog.Exercise `json:"customExercises"`
+	CustomWorkouts  []catalog.Workout  `json:"customWorkouts"`
 }
