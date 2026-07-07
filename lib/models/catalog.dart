@@ -33,6 +33,13 @@ class ExerciseDef {
         group: j['group'] as String,
         unit: j['unit'] as String,
       );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'group': group,
+        'unit': unit,
+      };
 }
 
 class WorkoutDef {
@@ -51,6 +58,12 @@ class WorkoutDef {
         exerciseIds: (j['exerciseIds'] as List).cast<String>(),
         color: j['color'] as String,
       );
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'exerciseIds': exerciseIds,
+        'color': color,
+      };
 }
 
 class CatalogMeta {
