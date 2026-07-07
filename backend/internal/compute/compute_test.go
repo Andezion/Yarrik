@@ -36,7 +36,7 @@ func TestBuildSessionThenAppearsInDashboardAndDiary(t *testing.T) {
 			{ExerciseID: "kruk2", Sets: []CreateSetRequest{{Arm: "R", Weight: 30, Reps: 8}}},
 		},
 	}
-	result, err := BuildSession(req, st.Cursor)
+	result, err := BuildSession(st, req, st.Cursor)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,19 +69,20 @@ func TestBuildSessionRejectsEmptySets(t *testing.T) {
 			{ExerciseID: "kruk2", Sets: []CreateSetRequest{{Arm: "R", Weight: 0, Reps: 0}}},
 		},
 	}
-	if _, err := BuildSession(req, 0); err == nil {
+	if _, err := BuildSession(emptyState(), req, 0); err == nil {
 		t.Fatal("expected an error for a session with no valid sets")
 	}
 }
 
 func TestBuildGoalValidation(t *testing.T) {
-	if _, err := BuildGoal(CreateGoalRequest{ExerciseID: "does-not-exist", Arm: "L", Target: 10}); err == nil {
+	st := emptyState()
+	if _, err := BuildGoal(st, CreateGoalRequest{ExerciseID: "does-not-exist", Arm: "L", Target: 10}); err == nil {
 		t.Fatal("expected error for unknown exercise")
 	}
-	if _, err := BuildGoal(CreateGoalRequest{ExerciseID: "kruk2", Arm: "L", Target: 0}); err == nil {
+	if _, err := BuildGoal(st, CreateGoalRequest{ExerciseID: "kruk2", Arm: "L", Target: 0}); err == nil {
 		t.Fatal("expected error for zero target")
 	}
-	g, err := BuildGoal(CreateGoalRequest{ExerciseID: "kruk2", Arm: "L", Target: 45})
+	g, err := BuildGoal(st, CreateGoalRequest{ExerciseID: "kruk2", Arm: "L", Target: 45})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +90,6 @@ func TestBuildGoalValidation(t *testing.T) {
 		t.Fatal("expected a generated ID")
 	}
 
-	st := emptyState()
 	st.Goals = append(st.Goals, g)
 	goals := Goals(st)
 	if len(goals) != 1 || goals[0].Pct != 0 {
