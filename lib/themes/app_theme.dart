@@ -50,6 +50,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.blue,
           foregroundColor: Colors.white,
+          iconColor: Colors.white,
           elevation: 4,
           shadowColor: AppColors.blue.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
