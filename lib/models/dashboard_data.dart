@@ -92,7 +92,6 @@ class DashboardData {
     required this.bodyweight,
     required this.weeklyTonnage,
     required this.recentSessions,
-    required this.isDemo,
   });
 
   final String name;
@@ -110,7 +109,6 @@ class DashboardData {
   final List<Bodyweight> bodyweight;
   final List<WeekPoint> weeklyTonnage;
   final List<SessionView> recentSessions;
-  final bool isDemo;
 
   factory DashboardData.fromJson(Map<String, dynamic> j) => DashboardData(
         name: j['name'] as String,
@@ -138,6 +136,5 @@ class DashboardData {
         recentSessions: (j['recentSessions'] as List)
             .map((e) => SessionView.fromJson(e as Map<String, dynamic>))
             .toList(),
-        isDemo: (j['isDemo'] as bool?) ?? false,
       );
 }
