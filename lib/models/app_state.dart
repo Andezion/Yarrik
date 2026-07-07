@@ -1,3 +1,4 @@
+import 'catalog.dart';
 import 'session.dart';
 
 class Bodyweight {
@@ -24,7 +25,7 @@ class Goal {
 
   final String id;
   final String exId;
-  final String arm; 
+  final String arm;
   final double target;
 
   factory Goal.fromJson(Map<String, dynamic> j) => Goal(
@@ -50,7 +51,8 @@ class AppState {
     required this.bw,
     required this.goals,
     required this.tourney,
-    required this.demo,
+    required this.customExercises,
+    required this.customWorkouts,
   });
 
   final String name;
@@ -59,7 +61,8 @@ class AppState {
   final List<Bodyweight> bw;
   final List<Goal> goals;
   final String tourney;
-  final bool demo;
+  final List<ExerciseDef> customExercises;
+  final List<WorkoutDef> customWorkouts;
 
   factory AppState.fromJson(Map<String, dynamic> j) => AppState(
         name: (j['name'] as String?) ?? '',
@@ -74,7 +77,12 @@ class AppState {
             .map((e) => Goal.fromJson(e as Map<String, dynamic>))
             .toList(),
         tourney: (j['tourney'] as String?) ?? '',
-        demo: (j['demo'] as bool?) ?? false,
+        customExercises: ((j['customExercises'] as List?) ?? const [])
+            .map((e) => ExerciseDef.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        customWorkouts: ((j['customWorkouts'] as List?) ?? const [])
+            .map((e) => WorkoutDef.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -84,7 +92,8 @@ class AppState {
         'bw': bw.map((b) => b.toJson()).toList(),
         'goals': goals.map((g) => g.toJson()).toList(),
         'tourney': tourney,
-        'demo': demo,
+        'customExercises': customExercises.map((e) => e.toJson()).toList(),
+        'customWorkouts': customWorkouts.map((w) => w.toJson()).toList(),
       };
 
   AppState copyWith({
@@ -94,7 +103,8 @@ class AppState {
     List<Bodyweight>? bw,
     List<Goal>? goals,
     String? tourney,
-    bool? demo,
+    List<ExerciseDef>? customExercises,
+    List<WorkoutDef>? customWorkouts,
   }) {
     return AppState(
       name: name ?? this.name,
@@ -103,7 +113,8 @@ class AppState {
       bw: bw ?? this.bw,
       goals: goals ?? this.goals,
       tourney: tourney ?? this.tourney,
-      demo: demo ?? this.demo,
+      customExercises: customExercises ?? this.customExercises,
+      customWorkouts: customWorkouts ?? this.customWorkouts,
     );
   }
 
@@ -114,6 +125,7 @@ class AppState {
     bw: [],
     goals: [],
     tourney: '',
-    demo: false,
+    customExercises: [],
+    customWorkouts: [],
   );
 }
