@@ -27,6 +27,9 @@ class AppStateProvider extends ChangeNotifier {
 
   ComputeApi get compute => _computeApi;
 
+  List<WorkoutDef> get allWorkouts => [...meta.workouts, ..._state.customWorkouts];
+  List<ExerciseDef> get allExercises => [...meta.exercises, ..._state.customExercises];
+
   Future<void> load() async {
     _meta = _computeApi.meta();
     _state = await _storage.load();
@@ -40,11 +43,10 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   Future<void> logSession(CreateSessionRequest request) async {
-    final result = _computeApi.buildSession(request, _state.cursor);
+    final result = _computeApi.buildSession(_state, request, _state.cursor);
     _state = _state.copyWith(
       sessions: [..._state.sessions, result.session],
       cursor: result.newCursor,
-      demo: false,
     );
     await _persist();
   }
@@ -57,7 +59,7 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   Future<void> addGoal(CreateGoalRequest request) async {
-    final goalJson = _computeApi.buildGoal(request);
+    final goalJson = _computeApi.buildGoal(_state, request);
     _state = _state.copyWith(
       goals: [..._state.goals, Goal.fromJson(goalJson)],
     );
@@ -106,7 +108,22 @@ class AppStateProvider extends ChangeNotifier {
       bw: result.bw,
       goals: result.goals,
       tourney: result.tourney,
-      demo: false,
+    );
+    await _persist();
+  }
+
+  Future<void> addCustomExercise(CreateExerciseRequest request) async {
+    final exercise = _computeApi.createExercise(_state, request);
+    _state = _state.copyWith(
+      customExercises: [..._state.customExercises, exercise],
+    );
+    await _persist();
+  }
+
+  Future<void> addCustomWorkout(CreateWorkoutRequest request) async {
+    final workout = _computeApi.createWorkout(_state, request);
+    _state = _state.copyWith(
+      customWorkouts: [..._state.customWorkouts, workout],
     );
     await _persist();
   }
@@ -126,7 +143,6 @@ class AppStateProvider extends ChangeNotifier {
       bw: [],
       goals: [],
       cursor: 0,
-      demo: false,
     );
     await _persist();
   }
