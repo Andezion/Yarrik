@@ -7,6 +7,7 @@ import '../themes/app_colors.dart';
 import '../utils/color_utils.dart';
 import '../utils/date_utils.dart';
 import '../widgets/glass_card.dart';
+import 'create_exercise_sheet.dart';
 import 'exercise_detail_screen.dart';
 
 class ExercisesScreen extends StatelessWidget {
@@ -19,9 +20,20 @@ class ExercisesScreen extends StatelessWidget {
 
     return ListView(
       children: [
-        Text('Упражнения', style: Theme.of(context).textTheme.headlineSmall),
+        Row(
+          children: [
+            Expanded(
+              child: Text('Упражнения', style: Theme.of(context).textTheme.headlineSmall),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => openCreateExerciseSheet(context),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Добавить упражнение'),
+            ),
+          ],
+        ),
         const Text(
-          '15 движений · рекорды и прогресс за 4 недели · тап — история',
+          'Рекорды и прогресс за 4 недели · тап — история',
           style: TextStyle(color: AppColors.muted, fontSize: 13),
         ),
         const SizedBox(height: 16),
