@@ -10,7 +10,7 @@ import (
 	"armforge/internal/util"
 )
 
-func PerfScore(sessions []models.Session, s models.Session) int {
+func PerfScore(sessions []models.Session, s models.Session, cat catalog.Catalog) int {
 	sorted := SortedSessions(sessions)
 	var same []models.Session
 	for _, x := range sorted {
@@ -21,7 +21,7 @@ func PerfScore(sessions []models.Session, s models.Session) int {
 	if len(same) > 5 {
 		same = same[len(same)-5:]
 	}
-	vol := SessionVolume(s)
+	vol := SessionVolume(s, cat)
 	if len(same) == 0 {
 		if vol > 0 {
 			return 75
@@ -30,7 +30,7 @@ func PerfScore(sessions []models.Session, s models.Session) int {
 	}
 	sum := 0.0
 	for _, x := range same {
-		sum += SessionVolume(x)
+		sum += SessionVolume(x, cat)
 	}
 	avg := sum / float64(len(same))
 	if avg == 0 {
@@ -80,7 +80,7 @@ type Recovery struct {
 	Days *int `json:"days"`
 }
 
-func RecoveryByGroup(sessions []models.Session) map[string]Recovery {
+func RecoveryByGroup(sessions []models.Session, cat catalog.Catalog) map[string]Recovery {
 	res := map[string]Recovery{}
 	today := dateutil.Today()
 	sorted := SortedSessions(sessions)
@@ -89,7 +89,7 @@ func RecoveryByGroup(sessions []models.Session) map[string]Recovery {
 		for _, s := range sorted {
 			touched := false
 			for _, e := range s.Entries {
-				ex := catalog.ExerciseByID(e.ExerciseID)
+				ex := cat.ExerciseByID(e.ExerciseID)
 				if ex != nil && ex.Group == g.ID {
 					touched = true
 					break
