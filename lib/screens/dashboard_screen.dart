@@ -12,7 +12,6 @@ import '../utils/tab_switcher.dart';
 import '../widgets/charts/bar_chart_widget.dart';
 import '../widgets/charts/chart_point.dart';
 import '../widgets/charts/line_chart_widget.dart';
-import '../widgets/demo_banner.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/score_ring.dart';
 import 'log_workout_sheet.dart';
@@ -36,7 +35,6 @@ class DashboardScreen extends StatelessWidget {
 
     return ListView(
       children: [
-        if (data.isDemo) DemoBanner(onClear: () => provider.wipeAll()),
         _HeroCard(data: data),
         const SizedBox(height: 16),
         wide
