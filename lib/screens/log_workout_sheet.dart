@@ -166,12 +166,12 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      for (var i = 0; i < meta.workouts.length; i++)
+                      for (var i = 0; i < _provider.allWorkouts.length; i++)
                         _chip(
-                          meta.workouts[i].name.replaceFirst('Тренировка', 'Тр.'),
+                          _provider.allWorkouts[i].name.replaceFirst('Тренировка', 'Тр.'),
                           _workoutIdx == i,
                           () => _loadWorkout(i),
-                          color: colorFromHex(meta.workouts[i].color),
+                          color: colorFromHex(_provider.allWorkouts[i].color),
                         ),
                     ],
                   ),
