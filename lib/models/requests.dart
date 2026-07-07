@@ -67,3 +67,23 @@ class CreateGoalRequest {
 
   Map<String, dynamic> toJson() => {'exId': exId, 'arm': arm, 'target': target};
 }
+
+class CreateExerciseRequest {
+  const CreateExerciseRequest({required this.name, required this.group, required this.unit});
+
+  final String name;
+  final String group;
+  final String unit;
+
+  Map<String, dynamic> toJson() => {'name': name, 'group': group, 'unit': unit};
+}
+
+class CreateWorkoutRequest {
+  const CreateWorkoutRequest({required this.name, required this.exerciseIds, required this.color});
+
+  final String name;
+  final List<String> exerciseIds;
+  final String color;
+
+  Map<String, dynamic> toJson() => {'name': name, 'exerciseIds': exerciseIds, 'color': color};
+}
