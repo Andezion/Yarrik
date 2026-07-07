@@ -49,7 +49,7 @@ func ImportAny(raw map[string]json.RawMessage, current models.AppState) (ImportR
 	}
 
 	if logsRaw, has := raw["logs"]; has {
-		sessions, ok := importLegacyLogs(logsRaw)
+		sessions, ok := importLegacyLogs(logsRaw, current.CustomWorkouts)
 		if !ok {
 			return ImportResult{}, false
 		}
@@ -77,7 +77,7 @@ type legacyLog struct {
 	} `json:"sets"`
 }
 
-func importLegacyLogs(raw json.RawMessage) ([]models.Session, bool) {
+func importLegacyLogs(raw json.RawMessage, customWorkouts []catalog.Workout) ([]models.Session, bool) {
 	var logs []legacyLog
 	if err := json.Unmarshal(raw, &logs); err != nil {
 		return nil, false
@@ -93,6 +93,7 @@ func importLegacyLogs(raw json.RawMessage) ([]models.Session, bool) {
 	}
 	sort.Strings(dates)
 
+	cat := catalog.Resolve(nil, customWorkouts)
 	sessions := make([]models.Session, 0, len(dates))
 	for _, date := range dates {
 		dayLogs := byDate[date]
@@ -113,7 +114,7 @@ func importLegacyLogs(raw json.RawMessage) ([]models.Session, bool) {
 		sessions = append(sessions, models.Session{
 			ID:         util.NewID(),
 			Date:       date,
-			WorkoutIdx: catalog.BestMatchingWorkout(ids),
+			WorkoutIdx: cat.BestMatchingWorkout(ids),
 			Notes:      "",
 			Tags:       []string{},
 			Entries:    entries,
