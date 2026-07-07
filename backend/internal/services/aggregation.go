@@ -15,11 +15,11 @@ type WeekAgg struct {
 	Volume    float64 `json:"volume"`
 }
 
-func AggWeeks(sessions []models.Session, n int) []WeekAgg {
+func AggWeeks(sessions []models.Session, n int, cat catalog.Catalog) []WeekAgg {
 	byWeek := map[string]float64{}
 	for _, s := range sessions {
 		k := dateutil.WeekKey(dateutil.Parse(s.Date))
-		byWeek[k] += SessionVolume(s)
+		byWeek[k] += SessionVolume(s, cat)
 	}
 	now := time.Now()
 	out := make([]WeekAgg, 0, n)
@@ -36,11 +36,11 @@ type MonthAgg struct {
 	Volume float64 `json:"volume"`
 }
 
-func AggMonths(sessions []models.Session, n int) []MonthAgg {
+func AggMonths(sessions []models.Session, n int, cat catalog.Catalog) []MonthAgg {
 	byMonth := map[string]float64{}
 	for _, s := range sessions {
 		if len(s.Date) >= 7 {
-			byMonth[s.Date[:7]] += SessionVolume(s)
+			byMonth[s.Date[:7]] += SessionVolume(s, cat)
 		}
 	}
 	now := time.Now()
@@ -53,11 +53,11 @@ func AggMonths(sessions []models.Session, n int) []MonthAgg {
 	return out
 }
 
-func GroupDistribution(sessions []models.Session) map[string]int {
+func GroupDistribution(sessions []models.Session, cat catalog.Catalog) map[string]int {
 	dist := map[string]int{}
 	for _, s := range sessions {
 		for _, e := range s.Entries {
-			ex := catalog.ExerciseByID(e.ExerciseID)
+			ex := cat.ExerciseByID(e.ExerciseID)
 			if ex == nil {
 				continue
 			}
