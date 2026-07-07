@@ -3,41 +3,20 @@ package services
 import (
 	"testing"
 
+	"armforge/internal/catalog"
 	"armforge/internal/models"
 )
 
-func TestGenDemoProducesPlausibleHistory(t *testing.T) {
-	sessions, cursor, bw := GenDemo()
-	if len(sessions) == 0 {
-		t.Fatal("expected at least one demo session")
-	}
-	if cursor != len(sessions) {
-		t.Fatalf("cursor should equal number of sessions logged, got cursor=%d sessions=%d", cursor, len(sessions))
-	}
-	if len(bw) != 11 {
-		t.Fatalf("expected 11 bodyweight points, got %d", len(bw))
-	}
-	for _, s := range sessions {
-		if len(s.Entries) != 3 {
-			t.Fatalf("expected 3 entries per demo session, got %d for session %s", len(s.Entries), s.ID)
-		}
-		for _, e := range s.Entries {
-			if len(e.Sets) != 6 {
-				t.Fatalf("expected 6 sets (3 per arm) per entry, got %d", len(e.Sets))
-			}
-		}
-	}
-}
-
 func TestEntryVolumeScalesSecondsExercises(t *testing.T) {
+	cat := catalog.Resolve(nil, nil)
 	e := models.Entry{ExerciseID: "kistlam", Sets: []models.Set{{Arm: "R", Weight: 30, Reps: 20}}}
-	got := EntryVolume(e)
+	got := EntryVolume(e, cat)
 	want := 30.0 * 20.0 / 10.0
 	if got != want {
 		t.Fatalf("EntryVolume(sec) = %v, want %v", got, want)
 	}
 	e2 := models.Entry{ExerciseID: "kruk2", Sets: []models.Set{{Arm: "R", Weight: 30, Reps: 8}}}
-	got2 := EntryVolume(e2)
+	got2 := EntryVolume(e2, cat)
 	if got2 != 240 {
 		t.Fatalf("EntryVolume(reps) = %v, want 240", got2)
 	}
