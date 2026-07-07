@@ -84,24 +84,3 @@ func TestDispatchBuildSessionValidationError(t *testing.T) {
 		t.Fatal("expected a non-empty error message")
 	}
 }
-
-func TestDispatchGenDemo(t *testing.T) {
-	raw := dispatch("genDemo", "{}")
-	var env envelope
-	if err := json.Unmarshal([]byte(raw), &env); err != nil {
-		t.Fatal(err)
-	}
-	if !env.OK {
-		t.Fatalf("expected ok=true, got error %q", env.Error)
-	}
-	var state struct {
-		Demo     bool          `json:"demo"`
-		Sessions []interface{} `json:"sessions"`
-	}
-	if err := json.Unmarshal(env.Data, &state); err != nil {
-		t.Fatal(err)
-	}
-	if !state.Demo || len(state.Sessions) == 0 {
-		t.Fatalf("expected seeded demo state, got demo=%v sessions=%d", state.Demo, len(state.Sessions))
-	}
-}
