@@ -51,8 +51,9 @@ class ComputeApi {
         .toList();
   }
 
-  BuildSessionResult buildSession(CreateSessionRequest request, int currentCursor) {
+  BuildSessionResult buildSession(AppState state, CreateSessionRequest request, int currentCursor) {
     final data = _bridge.call('buildSession', {
+      'state': state.toJson(),
       'request': request.toJson(),
       'currentCursor': currentCursor,
     });
@@ -88,8 +89,8 @@ class ComputeApi {
         .toList();
   }
 
-  Map<String, dynamic> buildGoal(CreateGoalRequest request) {
-    final data = _bridge.call('buildGoal', {'request': request.toJson()});
+  Map<String, dynamic> buildGoal(AppState state, CreateGoalRequest request) {
+    final data = _bridge.call('buildGoal', {'state': state.toJson(), 'request': request.toJson()});
     return data as Map<String, dynamic>;
   }
 
@@ -98,13 +99,18 @@ class ComputeApi {
     return LogInitData.fromJson(data as Map<String, dynamic>);
   }
 
-  AppState genDemo() {
-    final data = _bridge.call('genDemo', {});
-    return AppState.fromJson(data as Map<String, dynamic>);
-  }
-
   ImportResult importAny(Map<String, dynamic> raw, AppState current) {
     final data = _bridge.call('importAny', {'raw': raw, 'current': current.toJson()});
     return ImportResult.fromJson(data as Map<String, dynamic>);
+  }
+
+  ExerciseDef createExercise(AppState state, CreateExerciseRequest request) {
+    final data = _bridge.call('createExercise', {'state': state.toJson(), 'request': request.toJson()});
+    return ExerciseDef.fromJson(data as Map<String, dynamic>);
+  }
+
+  WorkoutDef createWorkout(AppState state, CreateWorkoutRequest request) {
+    final data = _bridge.call('createWorkout', {'state': state.toJson(), 'request': request.toJson()});
+    return WorkoutDef.fromJson(data as Map<String, dynamic>);
   }
 }
