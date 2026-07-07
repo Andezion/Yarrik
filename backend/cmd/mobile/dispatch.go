@@ -30,8 +30,9 @@ var methods = map[string]methodFunc{
 	"goals":          methodGoals,
 	"buildGoal":      methodBuildGoal,
 	"logInit":        methodLogInit,
-	"genDemo":        methodGenDemo,
 	"importAny":      methodImportAny,
+	"createExercise": methodCreateExercise,
+	"createWorkout":  methodCreateWorkout,
 }
 
 func dispatch(method string, argsJSON string) string {
@@ -103,6 +104,7 @@ func methodSessionsOnDate(args json.RawMessage) (interface{}, error) {
 }
 
 type buildSessionArgs struct {
+	State         models.AppState              `json:"state"`
 	Request       compute.CreateSessionRequest `json:"request"`
 	CurrentCursor int                          `json:"currentCursor"`
 }
@@ -112,7 +114,7 @@ func methodBuildSession(args json.RawMessage) (interface{}, error) {
 	if err := json.Unmarshal(args, &a); err != nil {
 		return nil, err
 	}
-	return compute.BuildSession(a.Request, a.CurrentCursor)
+	return compute.BuildSession(a.State, a.Request, a.CurrentCursor)
 }
 
 type calendarArgs struct {
@@ -176,6 +178,7 @@ func methodGoals(args json.RawMessage) (interface{}, error) {
 }
 
 type buildGoalArgs struct {
+	State   models.AppState           `json:"state"`
 	Request compute.CreateGoalRequest `json:"request"`
 }
 
@@ -184,7 +187,7 @@ func methodBuildGoal(args json.RawMessage) (interface{}, error) {
 	if err := json.Unmarshal(args, &a); err != nil {
 		return nil, err
 	}
-	return compute.BuildGoal(a.Request)
+	return compute.BuildGoal(a.State, a.Request)
 }
 
 type logInitArgs struct {
@@ -198,10 +201,6 @@ func methodLogInit(args json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 	return compute.LogInit(a.State, a.WorkoutIdx), nil
-}
-
-func methodGenDemo(_ json.RawMessage) (interface{}, error) {
-	return services.SeedDemoState(), nil
 }
 
 type importAnyArgs struct {
@@ -219,4 +218,30 @@ func methodImportAny(args json.RawMessage) (interface{}, error) {
 		return nil, fmt.Errorf("file doesn't look like a diary backup")
 	}
 	return result, nil
+}
+
+type createExerciseArgs struct {
+	State   models.AppState                `json:"state"`
+	Request compute.CreateExerciseRequest `json:"request"`
+}
+
+func methodCreateExercise(args json.RawMessage) (interface{}, error) {
+	var a createExerciseArgs
+	if err := json.Unmarshal(args, &a); err != nil {
+		return nil, err
+	}
+	return compute.BuildExercise(a.State, a.Request)
+}
+
+type createWorkoutArgs struct {
+	State   models.AppState               `json:"state"`
+	Request compute.CreateWorkoutRequest `json:"request"`
+}
+
+func methodCreateWorkout(args json.RawMessage) (interface{}, error) {
+	var a createWorkoutArgs
+	if err := json.Unmarshal(args, &a); err != nil {
+		return nil, err
+	}
+	return compute.BuildWorkout(a.State, a.Request)
 }
