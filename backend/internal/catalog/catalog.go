@@ -101,3 +101,57 @@ func WorkoutColor(idx int) string {
 	}
 	return Workouts[idx].Color
 }
+
+type Catalog struct {
+	Groups    []Group
+	Exercises []Exercise
+	Workouts  []Workout
+}
+
+func Resolve(customExercises []Exercise, customWorkouts []Workout) Catalog {
+	exercises := make([]Exercise, 0, len(Exercises)+len(customExercises))
+	exercises = append(exercises, Exercises...)
+	exercises = append(exercises, customExercises...)
+
+	workouts := make([]Workout, 0, len(Workouts)+len(customWorkouts))
+	workouts = append(workouts, Workouts...)
+	workouts = append(workouts, customWorkouts...)
+
+	return Catalog{Groups: Groups, Exercises: exercises, Workouts: workouts}
+}
+
+func (c Catalog) ExerciseByID(id string) *Exercise {
+	for i := range c.Exercises {
+		if c.Exercises[i].ID == id {
+			return &c.Exercises[i]
+		}
+	}
+	return nil
+}
+
+func (c Catalog) WorkoutColor(idx int) string {
+	if idx < 0 || idx >= len(c.Workouts) {
+		return "#2E97E5"
+	}
+	return c.Workouts[idx].Color
+}
+
+func (c Catalog) BestMatchingWorkout(exerciseIDs []string) int {
+	best, bestIdx := -1, 0
+	for i, w := range c.Workouts {
+		matches := 0
+		for _, wid := range w.ExerciseIDs {
+			for _, id := range exerciseIDs {
+				if id == wid {
+					matches++
+					break
+				}
+			}
+		}
+		if matches > best {
+			best = matches
+			bestIdx = i
+		}
+	}
+	return bestIdx
+}
