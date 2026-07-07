@@ -5,8 +5,8 @@ import (
 	"armforge/internal/models"
 )
 
-func EntryVolume(e models.Entry) float64 {
-	ex := catalog.ExerciseByID(e.ExerciseID)
+func EntryVolume(e models.Entry, cat catalog.Catalog) float64 {
+	ex := cat.ExerciseByID(e.ExerciseID)
 	v := 0.0
 	for _, s := range e.Sets {
 		if ex != nil && ex.Unit == "sec" {
@@ -18,10 +18,10 @@ func EntryVolume(e models.Entry) float64 {
 	return v
 }
 
-func SessionVolume(s models.Session) float64 {
+func SessionVolume(s models.Session, cat catalog.Catalog) float64 {
 	v := 0.0
 	for _, e := range s.Entries {
-		v += EntryVolume(e)
+		v += EntryVolume(e, cat)
 	}
 	return v
 }
