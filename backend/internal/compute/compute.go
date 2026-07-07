@@ -2,6 +2,7 @@ package compute
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ func Meta() MetaDTO {
 }
 
 func Dashboard(st models.AppState) DashboardDTO {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
 	sessions := st.Sessions
 
 	today := dateutil.Today()
@@ -30,7 +32,7 @@ func Dashboard(st models.AppState) DashboardDTO {
 	}
 	weekVol, weekSets := 0.0, 0
 	for _, s := range weekSessions {
-		weekVol += services.SessionVolume(s)
+		weekVol += services.SessionVolume(s, cat)
 		weekSets += services.SessionSets(s)
 	}
 
@@ -42,8 +44,8 @@ func Dashboard(st models.AppState) DashboardDTO {
 		}
 	}
 
-	exIDs := make([]string, len(catalog.Exercises))
-	for i, ex := range catalog.Exercises {
+	exIDs := make([]string, len(cat.Exercises))
+	for i, ex := range cat.Exercises {
 		exIDs[i] = ex.ID
 	}
 	sumR, sumL := services.ArmBalance(sessions, exIDs)
@@ -56,13 +58,13 @@ func Dashboard(st models.AppState) DashboardDTO {
 	prDTOs := make([]PRDTO, 0, len(prs))
 	for _, pr := range prs {
 		name := pr.ExerciseID
-		if ex := catalog.ExerciseByID(pr.ExerciseID); ex != nil {
+		if ex := cat.ExerciseByID(pr.ExerciseID); ex != nil {
 			name = ex.Name
 		}
 		prDTOs = append(prDTOs, PRDTO{ExerciseID: pr.ExerciseID, ExerciseName: name, Arm: pr.Arm, Weight: pr.Weight, Date: pr.Date})
 	}
 
-	recoveryMap := services.RecoveryByGroup(sessions)
+	recoveryMap := services.RecoveryByGroup(sessions, cat)
 	recoveryRows := make([]RecoveryRowDTO, 0, len(catalog.Groups))
 	for _, g := range catalog.Groups {
 		rec := recoveryMap[g.ID]
@@ -74,7 +76,7 @@ func Dashboard(st models.AppState) DashboardDTO {
 		bwDTOs = append(bwDTOs, BodyweightDTO{Date: b.Date, Kg: b.Kg})
 	}
 
-	weeks := services.AggWeeks(sessions, 10)
+	weeks := services.AggWeeks(sessions, 10, cat)
 	weekDTOs := make([]WeekPointDTO, 0, len(weeks))
 	for _, wpt := range weeks {
 		weekDTOs = append(weekDTOs, WeekPointDTO{WeekStart: wpt.WeekStart, Volume: wpt.Volume})
@@ -88,15 +90,15 @@ func Dashboard(st models.AppState) DashboardDTO {
 	recent := sorted[len(sorted)-recentCount:]
 	recentDTOs := make([]SessionDTO, 0, len(recent))
 	for i := len(recent) - 1; i >= 0; i-- {
-		recentDTOs = append(recentDTOs, sessionToDTO(recent[i], sessions))
+		recentDTOs = append(recentDTOs, sessionToDTO(recent[i], sessions, cat))
 	}
 
-	nextIdx := util.Clamp(st.Cursor%5, 0, 4)
+	nextIdx := util.Clamp(st.Cursor%len(cat.Workouts), 0, len(cat.Workouts)-1)
 
 	return DashboardDTO{
 		Name:              st.Name,
 		NextWorkoutIdx:    nextIdx,
-		NextWorkoutName:   catalog.Workouts[nextIdx].Name,
+		NextWorkoutName:   cat.Workouts[nextIdx].Name,
 		TourneyDate:       st.Tourney,
 		DaysToTourney:     daysToTourney,
 		WeekSessionsCount: len(weekSessions),
@@ -109,7 +111,6 @@ func Dashboard(st models.AppState) DashboardDTO {
 		Bodyweight:        bwDTOs,
 		WeeklyTonnage:     weekDTOs,
 		RecentSessions:    recentDTOs,
-		IsDemo:            st.Demo,
 	}
 }
 
@@ -120,6 +121,7 @@ type SessionsFilter struct {
 }
 
 func Sessions(st models.AppState, f SessionsFilter) []SessionDTO {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
 	sessions := st.Sessions
 	q := strings.ToLower(strings.TrimSpace(f.Query))
 
@@ -130,40 +132,41 @@ func Sessions(st models.AppState, f SessionsFilter) []SessionDTO {
 		if f.WorkoutIdx != nil && s.WorkoutIdx != *f.WorkoutIdx {
 			continue
 		}
-		if f.GroupID != "" && !sessionTouchesGroup(s, f.GroupID) {
+		if f.GroupID != "" && !sessionTouchesGroup(s, f.GroupID, cat) {
 			continue
 		}
-		if q != "" && !sessionMatchesQuery(s, q) {
+		if q != "" && !sessionMatchesQuery(s, q, cat) {
 			continue
 		}
-		out = append(out, sessionToDTO(s, sessions))
+		out = append(out, sessionToDTO(s, sessions, cat))
 	}
 	return out
 }
 
 func SessionsOnDate(st models.AppState, date string) []SessionDTO {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
 	out := []SessionDTO{}
 	for _, s := range st.Sessions {
 		if s.Date == date {
-			out = append(out, sessionToDTO(s, st.Sessions))
+			out = append(out, sessionToDTO(s, st.Sessions, cat))
 		}
 	}
 	return out
 }
 
-func sessionTouchesGroup(s models.Session, group string) bool {
+func sessionTouchesGroup(s models.Session, group string, cat catalog.Catalog) bool {
 	for _, e := range s.Entries {
-		if ex := catalog.ExerciseByID(e.ExerciseID); ex != nil && ex.Group == group {
+		if ex := cat.ExerciseByID(e.ExerciseID); ex != nil && ex.Group == group {
 			return true
 		}
 	}
 	return false
 }
 
-func sessionMatchesQuery(s models.Session, q string) bool {
+func sessionMatchesQuery(s models.Session, q string, cat catalog.Catalog) bool {
 	hay := strings.ToLower(s.Notes + " " + strings.Join(s.Tags, " "))
 	for _, e := range s.Entries {
-		if ex := catalog.ExerciseByID(e.ExerciseID); ex != nil {
+		if ex := cat.ExerciseByID(e.ExerciseID); ex != nil {
 			hay += " " + strings.ToLower(ex.Name)
 		}
 	}
@@ -175,8 +178,9 @@ type BuildSessionResult struct {
 	NewCursor int            `json:"newCursor"`
 }
 
-func BuildSession(req CreateSessionRequest, currentCursor int) (BuildSessionResult, error) {
-	if req.WorkoutIdx < 0 || req.WorkoutIdx >= len(catalog.Workouts) {
+func BuildSession(st models.AppState, req CreateSessionRequest, currentCursor int) (BuildSessionResult, error) {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
+	if req.WorkoutIdx < 0 || req.WorkoutIdx >= len(cat.Workouts) {
 		return BuildSessionResult{}, errors.New("invalid workoutIdx")
 	}
 	if req.Date == "" {
@@ -225,7 +229,7 @@ func BuildSession(req CreateSessionRequest, currentCursor int) (BuildSessionResu
 	}
 
 	newCursor := currentCursor
-	if req.WorkoutIdx == currentCursor%5 {
+	if req.WorkoutIdx == currentCursor%len(cat.Workouts) {
 		newCursor = currentCursor + 1
 	}
 
@@ -244,6 +248,7 @@ type CalendarDTO struct {
 }
 
 func Calendar(st models.AppState, year, month int) CalendarDTO {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
 	byDate := map[string][]models.Session{}
 	for _, s := range st.Sessions {
 		byDate[s.Date] = append(byDate[s.Date], s)
@@ -259,7 +264,7 @@ func Calendar(st models.AppState, year, month int) CalendarDTO {
 		}
 		colors := make([]string, 0, len(sessions))
 		for _, s := range sessions {
-			colors = append(colors, catalog.WorkoutColor(s.WorkoutIdx))
+			colors = append(colors, cat.WorkoutColor(s.WorkoutIdx))
 		}
 		days = append(days, CalendarDayDTO{Date: date, WorkoutColors: colors})
 	}
@@ -289,18 +294,19 @@ type StatsDTO struct {
 }
 
 func Stats(st models.AppState, exerciseID string) StatsDTO {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
 	sessions := st.Sessions
-	if catalog.ExerciseByID(exerciseID) == nil {
-		exerciseID = catalog.Exercises[0].ID
+	if cat.ExerciseByID(exerciseID) == nil {
+		exerciseID = cat.Exercises[0].ID
 	}
 
-	weeks := services.AggWeeks(sessions, 12)
+	weeks := services.AggWeeks(sessions, 12, cat)
 	weekDTOs := make([]WeekPointDTO, 0, len(weeks))
 	for _, wpt := range weeks {
 		weekDTOs = append(weekDTOs, WeekPointDTO{WeekStart: wpt.WeekStart, Volume: wpt.Volume})
 	}
 
-	months := services.AggMonths(sessions, 6)
+	months := services.AggMonths(sessions, 6, cat)
 	strength := services.StrengthProgression(sessions, exerciseID)
 
 	fatigueSessions := services.SessionsWithFatigue(sessions, 15)
@@ -309,7 +315,7 @@ func Stats(st models.AppState, exerciseID string) StatsDTO {
 		fatiguePts = append(fatiguePts, FatiguePointDTO{Date: s.Date, Fatigue: *s.Fatigue})
 	}
 
-	dist := services.GroupDistribution(sessions)
+	dist := services.GroupDistribution(sessions, cat)
 	groupSlices := make([]GroupSliceDTO, 0, len(catalog.Groups))
 	for _, g := range catalog.Groups {
 		count := dist[g.ID]
@@ -330,9 +336,10 @@ func Stats(st models.AppState, exerciseID string) StatsDTO {
 }
 
 func ExercisesTable(st models.AppState) []ExerciseRowDTO {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
 	sessions := st.Sessions
-	rows := make([]ExerciseRowDTO, 0, len(catalog.Exercises))
-	for _, ex := range catalog.Exercises {
+	rows := make([]ExerciseRowDTO, 0, len(cat.Exercises))
+	for _, ex := range cat.Exercises {
 		bR := services.BestForArm(sessions, ex.ID, "R", "")
 		bL := services.BestForArm(sessions, ex.ID, "L", "")
 		row := ExerciseRowDTO{
@@ -351,7 +358,7 @@ func ExercisesTable(st models.AppState) []ExerciseRowDTO {
 		if le := services.LastEntry(sessions, ex.ID); le != nil {
 			date := le.Date
 			row.LastDate = &date
-			row.Volume = services.EntryVolume(le.Entry)
+			row.Volume = services.EntryVolume(le.Entry, cat)
 			for _, s := range le.Entry.Sets {
 				arm := s.Arm
 				if arm == "" {
@@ -371,7 +378,8 @@ func ExercisesTable(st models.AppState) []ExerciseRowDTO {
 }
 
 func ExerciseDetail(st models.AppState, exerciseID string) (ExerciseDetailDTO, bool) {
-	ex := catalog.ExerciseByID(exerciseID)
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
+	ex := cat.ExerciseByID(exerciseID)
 	if ex == nil {
 		return ExerciseDetailDTO{}, false
 	}
@@ -419,15 +427,17 @@ func ExerciseDetail(st models.AppState, exerciseID string) (ExerciseDetailDTO, b
 }
 
 func Goals(st models.AppState) []GoalDTO {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
 	out := make([]GoalDTO, 0, len(st.Goals))
 	for _, g := range st.Goals {
-		out = append(out, goalToDTO(g, st.Sessions))
+		out = append(out, goalToDTO(g, st.Sessions, cat))
 	}
 	return out
 }
 
-func BuildGoal(req CreateGoalRequest) (models.Goal, error) {
-	if catalog.ExerciseByID(req.ExerciseID) == nil {
+func BuildGoal(st models.AppState, req CreateGoalRequest) (models.Goal, error) {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
+	if cat.ExerciseByID(req.ExerciseID) == nil {
 		return models.Goal{}, errors.New("unknown exercise")
 	}
 	if req.Arm != "R" && req.Arm != "L" {
@@ -440,16 +450,17 @@ func BuildGoal(req CreateGoalRequest) (models.Goal, error) {
 }
 
 func LogInit(st models.AppState, workoutIdx *int) LogInitDTO {
-	idx := st.Cursor % 5
-	if workoutIdx != nil && *workoutIdx >= 0 && *workoutIdx < len(catalog.Workouts) {
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
+	idx := st.Cursor % len(cat.Workouts)
+	if workoutIdx != nil && *workoutIdx >= 0 && *workoutIdx < len(cat.Workouts) {
 		idx = *workoutIdx
 	}
 
 	sessions := st.Sessions
-	exIDs := catalog.Workouts[idx].ExerciseIDs
+	exIDs := cat.Workouts[idx].ExerciseIDs
 	exercises := make([]LogExerciseDTO, 0, len(exIDs))
 	for _, exID := range exIDs {
-		ex := catalog.ExerciseByID(exID)
+		ex := cat.ExerciseByID(exID)
 		if ex == nil {
 			continue
 		}
@@ -477,4 +488,39 @@ func LogInit(st models.AppState, workoutIdx *int) LogInitDTO {
 	}
 
 	return LogInitDTO{WorkoutIdx: idx, Exercises: exercises}
+}
+
+func BuildExercise(st models.AppState, req CreateExerciseRequest) (catalog.Exercise, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return catalog.Exercise{}, errors.New("name is required")
+	}
+	if catalog.GroupByID(req.Group) == nil {
+		return catalog.Exercise{}, errors.New("unknown group")
+	}
+	if req.Unit != "reps" && req.Unit != "sec" {
+		return catalog.Exercise{}, errors.New("unit must be reps or sec")
+	}
+	return catalog.Exercise{ID: util.NewID(), Name: name, Group: req.Group, Unit: req.Unit}, nil
+}
+
+func BuildWorkout(st models.AppState, req CreateWorkoutRequest) (catalog.Workout, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return catalog.Workout{}, errors.New("name is required")
+	}
+	if len(req.ExerciseIDs) < 1 || len(req.ExerciseIDs) > 6 {
+		return catalog.Workout{}, errors.New("pick between 1 and 6 exercises")
+	}
+	cat := catalog.Resolve(st.CustomExercises, st.CustomWorkouts)
+	for _, id := range req.ExerciseIDs {
+		if cat.ExerciseByID(id) == nil {
+			return catalog.Workout{}, fmt.Errorf("unknown exercise %q", id)
+		}
+	}
+	color := strings.TrimSpace(req.Color)
+	if color == "" {
+		return catalog.Workout{}, errors.New("color is required")
+	}
+	return catalog.Workout{Name: name, ExerciseIDs: req.ExerciseIDs, Color: color}, nil
 }
