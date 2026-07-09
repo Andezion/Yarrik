@@ -7,6 +7,7 @@ import '../utils/color_utils.dart';
 import '../widgets/aero_button.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/session_card.dart';
+import 'create_exercise_sheet.dart';
 import 'create_workout_sheet.dart';
 import 'log_workout_sheet.dart';
 
@@ -83,6 +84,11 @@ class _DiaryScreenState extends State<DiaryScreen> {
               label: '+ Тренировка',
               selected: false,
               onTap: () => openCreateWorkoutSheet(context),
+            ),
+            AeroChip(
+              label: '+ Упражнение',
+              selected: false,
+              onTap: () => openCreateExerciseSheet(context),
             ),
           ],
         ),
