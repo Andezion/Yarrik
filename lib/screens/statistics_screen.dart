@@ -68,8 +68,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                             const CardTitle('Тоннаж по месяцам'),
                             BarChartWidget(
                               points: monthPoints,
-                              colorTop: const Color(0xFF7ED957),
-                              colorBottom: const Color(0xFF2E9825),
+                              colorTop: const Color(0xFFFFB25C),
+                              colorBottom: AppColors.orange,
                               formatY: fmtVol,
                             ),
                           ],
@@ -98,8 +98,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         const CardTitle('Тоннаж по месяцам'),
                         BarChartWidget(
                           points: monthPoints,
-                          colorTop: const Color(0xFF7ED957),
-                          colorBottom: const Color(0xFF2E9825),
+                          colorTop: const Color(0xFFFFB25C),
+                          colorBottom: AppColors.orange,
                           formatY: fmtVol,
                         ),
                       ],
@@ -124,7 +124,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  _legendDot(const Color(0xFF3AAE2F), 'правая'),
+                  _legendDot(AppColors.orangeLight, 'правая'),
                   const SizedBox(width: 14),
                   _legendDot(AppColors.blue, 'левая'),
                 ],
@@ -134,7 +134,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 height: 230,
                 series: [
                   LineSeries(points: strengthL, color: AppColors.blue),
-                  LineSeries(points: strengthR, color: const Color(0xFF3AAE2F)),
+                  LineSeries(points: strengthR, color: AppColors.orangeLight),
                 ],
               ),
             ],
