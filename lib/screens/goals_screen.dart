@@ -8,6 +8,7 @@ import '../models/requests.dart';
 import '../providers/app_state_provider.dart';
 import '../themes/app_colors.dart';
 import '../utils/date_utils.dart';
+import '../widgets/aero_button.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/glass_card.dart';
 
@@ -56,10 +57,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     children: [
                       Text(
                         daysToTourney != null && daysToTourney >= 0 ? '$daysToTourney' : '—',
-                        style: const TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.teal,
+                        style: TextStyle(
+                          fontSize: 44,
+                          fontWeight: FontWeight.w900,
+                          foreground: Paint()
+                            ..shader = const LinearGradient(colors: [AppColors.aquaDeep, AppColors.aqua, AppColors.mint])
+                                .createShader(const Rect.fromLTWH(0, 0, 90, 44)),
                         ),
                       ),
                       const Text('дней до турнира', style: TextStyle(color: AppColors.muted, fontSize: 12)),
@@ -72,7 +75,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       children: [
                         const Text('Дата турнира', style: TextStyle(color: AppColors.muted, fontSize: 10.5)),
                         const SizedBox(height: 4),
-                        OutlinedButton(
+                        AeroButton(
+                          label: tourney.isNotEmpty ? fmtLong(tourney) : 'Выбрать дату',
+                          icon: Icons.event,
+                          variant: AeroButtonVariant.ghost,
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
@@ -84,7 +90,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                               await provider.updateTourneyDate(formatIso(picked));
                             }
                           },
-                          child: Text(tourney.isNotEmpty ? fmtLong(tourney) : 'Выбрать дату'),
                         ),
                         const SizedBox(height: 8),
                         const Text(
@@ -172,24 +177,28 @@ class _GoalsScreenState extends State<GoalsScreen> {
             decoration: const InputDecoration(labelText: 'Целевой вес, кг'),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: () async {
-              final target = double.tryParse(_targetController.text.replaceAll(',', '.'));
-              if (target == null || target <= 0) {
-                showAppToast(context, 'Укажи целевой вес');
-                return;
-              }
-              try {
-                await context.read<AppStateProvider>().addGoal(
-                      CreateGoalRequest(exId: _newExerciseId!, arm: _newArm, target: target),
-                    );
-                _targetController.clear();
-                if (mounted) showAppToast(context, 'Цель добавлена');
-              } on NativeCallException catch (e) {
-                if (mounted) showAppToast(context, e.message);
-              }
-            },
-            child: const Text('Добавить цель'),
+          SizedBox(
+            width: double.infinity,
+            child: AeroButton(
+              label: 'Добавить цель',
+              variant: AeroButtonVariant.ghost,
+              onPressed: () async {
+                final target = double.tryParse(_targetController.text.replaceAll(',', '.'));
+                if (target == null || target <= 0) {
+                  showAppToast(context, 'Укажи целевой вес');
+                  return;
+                }
+                try {
+                  await context.read<AppStateProvider>().addGoal(
+                        CreateGoalRequest(exId: _newExerciseId!, arm: _newArm, target: target),
+                      );
+                  _targetController.clear();
+                  if (mounted) showAppToast(context, 'Цель добавлена');
+                } on NativeCallException catch (e) {
+                  if (mounted) showAppToast(context, e.message);
+                }
+              },
+            ),
           ),
         ],
       ),
@@ -205,7 +214,7 @@ class _GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = goal.arm == 'R' ? const Color(0xFF2E9825) : AppColors.blue;
+    final color = goal.arm == 'R' ? AppColors.orangeLight : AppColors.blue;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
