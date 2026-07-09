@@ -19,7 +19,7 @@ class ArmforgeApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppStateProvider(),
       child: MaterialApp(
-        title: 'ARMFORGE',
+        title: 'Yarrik',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         home: const _RootGate(),
