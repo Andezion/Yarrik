@@ -9,6 +9,7 @@ import '../utils/color_utils.dart';
 import '../utils/date_utils.dart';
 import '../utils/nav_items.dart';
 import '../utils/tab_switcher.dart';
+import '../widgets/aero_button.dart';
 import '../widgets/charts/bar_chart_widget.dart';
 import '../widgets/charts/chart_point.dart';
 import '../widgets/charts/line_chart_widget.dart';
@@ -145,7 +146,7 @@ class _HeroCard extends StatelessWidget {
                     flex: 100 - pctL,
                     child: const DecoratedBox(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [Color(0xFF2E9825), Color(0xFF7ED957)]),
+                        gradient: LinearGradient(colors: [AppColors.orange, Color(0xFFFFB25C)]),
                       ),
                     ),
                   ),
@@ -153,7 +154,7 @@ class _HeroCard extends StatelessWidget {
                     flex: pctL,
                     child: const DecoratedBox(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [Color(0xFF1F7FD1), Color(0xFF2E97E5)]),
+                        gradient: LinearGradient(colors: [AppColors.aquaDeep, AppColors.aqua]),
                       ),
                     ),
                   ),
@@ -190,17 +191,18 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 10,
+            runSpacing: 10,
             children: [
-              ElevatedButton.icon(
+              AeroButton(
+                label: 'Записать тренировку',
+                icon: Icons.add,
                 onPressed: () => openLogWorkoutSheet(context),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Записать тренировку'),
               ),
-              OutlinedButton(
+              AeroButton(
+                label: 'Открыть дневник',
+                variant: AeroButtonVariant.ghost,
                 onPressed: () => TabSwitcher.of(context).go(AppTab.diary),
-                child: const Text('Открыть дневник'),
               ),
             ],
           ),
@@ -219,9 +221,12 @@ class _TourneyChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.orangeLight.withValues(alpha: 0.12),
+        gradient: LinearGradient(
+          colors: [Colors.white.withValues(alpha: 0.9), const Color(0xFFFFE6D5).withValues(alpha: 0.7)],
+        ),
         borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
+        border: Border.all(color: AppColors.orange.withValues(alpha: 0.55)),
+        boxShadow: [BoxShadow(color: AppColors.orange.withValues(alpha: 0.18), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -229,7 +234,8 @@ class _TourneyChip extends StatelessWidget {
           Container(
             width: 7,
             height: 7,
-            decoration: const BoxDecoration(color: AppColors.orangeLight, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppColors.orangeLight, shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: AppColors.orangeLight.withValues(alpha: 0.7), blurRadius: 5)]),
           ),
           const SizedBox(width: 7),
           Text(
@@ -278,7 +284,8 @@ class _PrCard extends StatelessWidget {
             'Личные рекорды',
             trailing: GestureDetector(
               onTap: () => TabSwitcher.of(context).go(AppTab.ex),
-              child: const Text('все →', style: TextStyle(color: AppColors.blue, fontSize: 12)),
+              child: const Text('все →',
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
           ),
           if (data.recentPrs.isEmpty)
@@ -443,8 +450,8 @@ class _WeeklyTonnageCard extends StatelessWidget {
           const CardTitle('Тоннаж по неделям'),
           BarChartWidget(
             points: points,
-            colorTop: const Color(0xFF7ED957),
-            colorBottom: const Color(0xFF2E9825),
+            colorTop: const Color(0xFFFFB25C),
+            colorBottom: AppColors.orange,
             formatY: (v) => fmtVol(v),
           ),
         ],
@@ -467,7 +474,8 @@ class _RecentSessionsCard extends StatelessWidget {
             'Последние тренировки',
             trailing: GestureDetector(
               onTap: () => TabSwitcher.of(context).go(AppTab.diary),
-              child: const Text('дневник →', style: TextStyle(color: AppColors.blue, fontSize: 12)),
+              child: const Text('дневник →',
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
           ),
           if (data.recentSessions.isEmpty)
