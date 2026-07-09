@@ -9,6 +9,8 @@ import '../themes/app_colors.dart';
 import '../themes/app_theme.dart';
 import '../utils/color_utils.dart';
 import '../utils/date_utils.dart';
+import '../widgets/aero_button.dart';
+import '../widgets/aero_sheet.dart';
 import '../widgets/app_toast.dart';
 
 Future<void> openLogWorkoutSheet(BuildContext context) {
@@ -143,40 +145,34 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
       minChildSize: 0.5,
       expand: false,
       builder: (context, controller) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3FAFF),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+        decoration: aeroSheetDecoration(),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
         child: init == null
             ? const Center(child: CircularProgressIndicator())
             : ListView(
                 controller: controller,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Записать тренировку',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.headingColor)),
-                      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
+                  const SheetHandle(),
+                  const SheetHeader(title: 'Записать тренировку'),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
                       for (var i = 0; i < _provider.allWorkouts.length; i++)
-                        _chip(
-                          _provider.allWorkouts[i].name.replaceFirst('Тренировка', 'Тр.'),
-                          _workoutIdx == i,
-                          () => _loadWorkout(i),
-                          color: colorFromHex(_provider.allWorkouts[i].color),
+                        AeroChip(
+                          label: _provider.allWorkouts[i].name.replaceFirst('Тренировка', 'Тр.'),
+                          selected: _workoutIdx == i,
+                          accentColor: colorFromHex(_provider.allWorkouts[i].color),
+                          onTap: () => _loadWorkout(i),
                         ),
                     ],
                   ),
                   const SizedBox(height: 14),
-                  OutlinedButton.icon(
+                  AeroButton(
+                    label: fmtLong(formatIso(_date)),
+                    icon: Icons.event,
+                    variant: AeroButtonVariant.ghost,
                     onPressed: () async {
                       final picked = await showDatePicker(
                         context: context,
@@ -186,8 +182,6 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
                       );
                       if (picked != null) setState(() => _date = picked);
                     },
-                    icon: const Icon(Icons.event, size: 18),
-                    label: Text(fmtLong(formatIso(_date))),
                   ),
                   const SizedBox(height: 14),
                   for (final ex in init.exercises) _exerciseBlock(ex),
@@ -214,26 +208,33 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
                     onChanged: (v) => setState(() => _rpe = v.round()),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Самочувствие', style: TextStyle(fontSize: 11, color: AppColors.muted)),
-                  const SizedBox(height: 6),
+                  const SheetLabel('Самочувствие'),
                   Row(
                     children: [
                       for (var i = 0; i < meta.moods.length; i++)
                         Expanded(
                           child: GestureDetector(
                             onTap: () => setState(() => _mood = i),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 3),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(11),
-                                color: _mood == i ? Colors.white : Colors.white.withValues(alpha: 0.5),
-                                border: Border.all(
-                                  color: _mood == i ? AppColors.blue.withValues(alpha: 0.8) : AppColors.line2,
+                            child: AnimatedScale(
+                              scale: _mood == i ? 1.08 : 1,
+                              duration: const Duration(milliseconds: 150),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14),
+                                  color: _mood == i ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                                  border: Border.all(
+                                    color: _mood == i ? AppColors.aqua : AppColors.line2,
+                                    width: _mood == i ? 2 : 1,
+                                  ),
+                                  boxShadow: _mood == i
+                                      ? [BoxShadow(color: AppColors.aqua.withValues(alpha: 0.35), blurRadius: 10)]
+                                      : null,
                                 ),
-                              ),
-                              child: Center(
-                                child: Text(meta.moods[i], style: const TextStyle(fontSize: 20)),
+                                child: Center(
+                                  child: Text(meta.moods[i], style: const TextStyle(fontSize: 20)),
+                                ),
                               ),
                             ),
                           ),
@@ -241,8 +242,7 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text('Усталость после', style: TextStyle(fontSize: 11, color: AppColors.muted)),
-                  const SizedBox(height: 6),
+                  const SheetLabel('Усталость после'),
                   Row(
                     children: [
                       for (var f = 1; f <= 5; f++)
@@ -251,11 +251,14 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
                             onTap: () => setState(() => _fatigue = f),
                             child: Container(
                               margin: const EdgeInsets.symmetric(horizontal: 3),
-                              height: 36,
+                              height: 38,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(11),
+                                borderRadius: BorderRadius.circular(14),
                                 color: _fatigue == f ? AppColors.fatigueColor(f) : Colors.white.withValues(alpha: 0.5),
                                 border: Border.all(color: AppColors.line2),
+                                boxShadow: _fatigue == f
+                                    ? [BoxShadow(color: AppColors.fatigueColor(f).withValues(alpha: 0.45), blurRadius: 8, offset: const Offset(0, 3))]
+                                    : null,
                               ),
                               child: Center(
                                 child: Text(
@@ -285,12 +288,13 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
                       hintText: 'Как шёл крюк, что с локтем, какие углы…',
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
+                    child: AeroButton(
+                      label: 'Сохранить тренировку',
+                      expand: true,
                       onPressed: _save,
-                      child: const Text('Сохранить тренировку'),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -306,27 +310,23 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
     final lRows = rows.where((r) => r.arm == 'L').toList();
     final repLabel = ex.unit == 'sec' ? 'сек' : 'повт';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(ex.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.headingColor)),
-          Text(
-            'Рекорд: ${ex.bestR > 0 ? ex.bestR : '—'} / ${ex.bestL > 0 ? ex.bestL : '—'} кг',
-            style: const TextStyle(fontSize: 11, color: AppColors.dim),
-          ),
-          const SizedBox(height: 8),
-          _armSection('Правая', AppColors.orangeLight, rRows, ex.exId, 'R', repLabel),
-          const SizedBox(height: 8),
-          _armSection('Левая', AppColors.blue, lRows, ex.exId, 'L', repLabel),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: SheetBlock(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(ex.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppTheme.headingColor)),
+            Text(
+              'Рекорд: ${ex.bestR > 0 ? ex.bestR : '—'} / ${ex.bestL > 0 ? ex.bestL : '—'} кг',
+              style: const TextStyle(fontSize: 11, color: AppColors.dim),
+            ),
+            const SizedBox(height: 8),
+            _armSection('Правая', AppColors.orangeLight, rRows, ex.exId, 'R', repLabel),
+            const SizedBox(height: 8),
+            _armSection('Левая', AppColors.blue, lRows, ex.exId, 'L', repLabel),
+          ],
+        ),
       ),
     );
   }
@@ -365,27 +365,32 @@ class _LogWorkoutSheetState extends State<LogWorkoutSheet> {
           ),
         Row(
           children: [
-            TextButton(onPressed: () => _addSet(exId, arm), child: const Text('+ подход')),
-            TextButton(onPressed: () => _removeSet(exId, arm), child: const Text('−')),
+            _miniAddButton('+ подход', () => _addSet(exId, arm)),
+            const SizedBox(width: 8),
+            _miniAddButton('−', () => _removeSet(exId, arm)),
           ],
         ),
       ],
     );
   }
 
-  Widget _chip(String label, bool selected, VoidCallback onTap, {required Color color}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(99),
-          color: selected ? color.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.6),
-          border: Border.all(color: selected ? color.withValues(alpha: 0.7) : AppColors.line2),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: selected ? color : AppColors.muted),
+  Widget _miniAddButton(String label, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(color: AppColors.aquaDeep.withValues(alpha: 0.45), style: BorderStyle.solid),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.aquaText),
+          ),
         ),
       ),
     );
