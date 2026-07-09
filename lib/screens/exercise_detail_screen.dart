@@ -48,7 +48,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                 const CardTitle('Рабочий вес по тренировкам'),
                 Row(
                   children: [
-                    _legendDot(const Color(0xFF3AAE2F), 'правая'),
+                    _legendDot(AppColors.orangeLight, 'правая'),
                     const SizedBox(width: 14),
                     _legendDot(AppColors.blue, 'левая'),
                   ],
@@ -58,7 +58,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                   height: 230,
                   series: [
                     LineSeries(points: ptsL, color: AppColors.blue),
-                    LineSeries(points: ptsR, color: const Color(0xFF3AAE2F)),
+                    LineSeries(points: ptsR, color: AppColors.orangeLight),
                   ],
                 ),
               ],
