@@ -5,19 +5,20 @@ import '../api/native_bridge.dart';
 import '../models/requests.dart';
 import '../providers/app_state_provider.dart';
 import '../themes/app_colors.dart';
-import '../themes/app_theme.dart';
 import '../utils/color_utils.dart';
+import '../widgets/aero_button.dart';
+import '../widgets/aero_sheet.dart';
 import '../widgets/app_toast.dart';
 
 const _kWorkoutColorPalette = [
-  '#2E97E5',
-  '#17B8A6',
-  '#F2A93B',
-  '#57C84D',
-  '#9A7BE8',
-  '#E8564E',
-  '#F5822E',
-  '#2FA344',
+  '#FF8A24',
+  '#1E9BE9',
+  '#EFAF1B',
+  '#52BD3A',
+  '#9D6FE8',
+  '#E14B38',
+  '#0FA8DE',
+  '#3BAF1E',
 ];
 
 const _kMaxWorkoutExercises = 6;
@@ -74,23 +75,14 @@ class _CreateWorkoutSheetState extends State<CreateWorkoutSheet> {
       minChildSize: 0.5,
       expand: false,
       builder: (context, controller) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3FAFF),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+        decoration: aeroSheetDecoration(),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
         child: ListView(
           controller: controller,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Новая тренировка',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.headingColor)),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-              ],
-            ),
-            const SizedBox(height: 12),
+            const SheetHandle(),
+            const SheetHeader(title: 'Новая тренировка'),
+            const SizedBox(height: 14),
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Название', hintText: 'Например: Тренировка 6'),
@@ -106,11 +98,11 @@ class _CreateWorkoutSheetState extends State<CreateWorkoutSheet> {
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
                 dense: true,
+                activeColor: AppColors.aquaDeep,
                 title: Text(ex.name, style: const TextStyle(fontSize: 13.5)),
               ),
             const SizedBox(height: 12),
-            const Text('Цвет', style: TextStyle(fontSize: 11, color: AppColors.muted)),
-            const SizedBox(height: 8),
+            const SheetLabel('Цвет'),
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -119,26 +111,30 @@ class _CreateWorkoutSheetState extends State<CreateWorkoutSheet> {
                   GestureDetector(
                     onTap: () => setState(() => _color = hex),
                     child: Container(
-                      width: 32,
-                      height: 32,
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
                         color: colorFromHex(hex),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: _color == hex ? AppColors.text : Colors.white,
+                          color: _color == hex ? Colors.white : Colors.white.withValues(alpha: 0.7),
                           width: _color == hex ? 3 : 2,
                         ),
+                        boxShadow: _color == hex
+                            ? [BoxShadow(color: colorFromHex(hex).withValues(alpha: 0.6), blurRadius: 10)]
+                            : null,
                       ),
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AeroButton(
+                label: _saving ? 'Создание…' : 'Создать тренировку',
+                expand: true,
                 onPressed: _saving ? null : _save,
-                child: Text(_saving ? 'Создание…' : 'Создать тренировку'),
               ),
             ),
             const SizedBox(height: 12),
