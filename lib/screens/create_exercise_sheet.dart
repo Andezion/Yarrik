@@ -5,8 +5,9 @@ import '../api/native_bridge.dart';
 import '../models/requests.dart';
 import '../providers/app_state_provider.dart';
 import '../themes/app_colors.dart';
-import '../themes/app_theme.dart';
 import '../utils/color_utils.dart';
+import '../widgets/aero_button.dart';
+import '../widgets/aero_sheet.dart';
 import '../widgets/app_toast.dart';
 
 Future<void> openCreateExerciseSheet(BuildContext context) {
@@ -47,47 +48,36 @@ class _CreateExerciseSheetState extends State<CreateExerciseSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3FAFF),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+        decoration: aeroSheetDecoration(),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Новое упражнение',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.headingColor)),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-              ],
-            ),
-            const SizedBox(height: 12),
+            const SheetHandle(),
+            const SheetHeader(title: 'Новое упражнение'),
+            const SizedBox(height: 14),
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Название', hintText: 'Например: Молот с гантелей'),
             ),
-            const SizedBox(height: 16),
-            const Text('Группа мышц', style: TextStyle(fontSize: 11, color: AppColors.muted)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 18),
+            const SheetLabel('Группа мышц'),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
                 for (final g in meta.groups)
-                  _chip(
-                    g.name,
-                    _group == g.id,
-                    () => setState(() => _group = g.id),
-                    color: colorFromHex(g.color),
+                  AeroChip(
+                    label: g.name,
+                    selected: _group == g.id,
+                    accentColor: colorFromHex(g.color),
+                    onTap: () => setState(() => _group = g.id),
                   ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text('Единица измерения', style: TextStyle(fontSize: 11, color: AppColors.muted)),
-            const SizedBox(height: 8),
+            const SizedBox(height: 18),
+            const SheetLabel('Единица измерения'),
             Row(
               children: [
                 Expanded(child: _unitButton('Повторения', 'reps')),
@@ -95,12 +85,13 @@ class _CreateExerciseSheetState extends State<CreateExerciseSheet> {
                 Expanded(child: _unitButton('Секунды', 'sec')),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: AeroButton(
+                label: _saving ? 'Создание…' : 'Создать упражнение',
+                expand: true,
                 onPressed: _saving ? null : _save,
-                child: Text(_saving ? 'Создание…' : 'Создать упражнение'),
               ),
             ),
           ],
@@ -113,35 +104,33 @@ class _CreateExerciseSheetState extends State<CreateExerciseSheet> {
     final selected = _unit == value;
     return GestureDetector(
       onTap: () => setState(() => _unit = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(11),
-          color: selected ? AppColors.blue.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.6),
-          border: Border.all(color: selected ? AppColors.blue.withValues(alpha: 0.7) : AppColors.line2),
+          borderRadius: BorderRadius.circular(16),
+          gradient: selected
+              ? const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFA9EEFF), Color(0xFF4FD4F8), Color(0xFF17B2E8), Color(0xFF5CD8F8)],
+                  stops: [0, 0.48, 0.52, 1],
+                )
+              : null,
+          color: selected ? null : Colors.white.withValues(alpha: 0.6),
+          border: Border.all(color: selected ? AppColors.aquaDeep.withValues(alpha: 0.6) : AppColors.line2),
+          boxShadow: selected
+              ? [BoxShadow(color: AppColors.aqua.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 3))]
+              : null,
         ),
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: selected ? AppColors.blue : AppColors.muted),
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(String label, bool selected, VoidCallback onTap, {required Color color}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(99),
-          color: selected ? color.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.6),
-          border: Border.all(color: selected ? color.withValues(alpha: 0.7) : AppColors.line2),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: selected ? color : AppColors.muted),
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w800,
+            color: selected ? Colors.white : AppColors.muted,
+          ),
         ),
       ),
     );
