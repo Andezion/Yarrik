@@ -11,6 +11,7 @@ import '../api/native_bridge.dart';
 import '../providers/app_state_provider.dart';
 import '../themes/app_colors.dart';
 import '../utils/date_utils.dart';
+import '../widgets/aero_button.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/glass_card.dart';
 
@@ -81,7 +82,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                OutlinedButton(
+                AeroButton(
+                  label: 'Записать',
                   onPressed: () async {
                     final kg = double.tryParse(_bwController.text.replaceAll(',', '.'));
                     if (kg == null || kg <= 0) {
@@ -92,7 +94,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _bwController.clear();
                     if (context.mounted) showAppToast(context, 'Вес записан');
                   },
-                  child: const Text('Записать'),
                 ),
               ],
             ),
@@ -122,21 +123,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                OutlinedButton.icon(
+                AeroButton(
+                  label: 'Скачать копию',
+                  icon: Icons.file_download_outlined,
+                  variant: AeroButtonVariant.ghost,
                   onPressed: () => _exportBackup(context, provider),
-                  icon: const Icon(Icons.file_download_outlined, size: 18),
-                  label: const Text('Скачать копию'),
                 ),
-                OutlinedButton.icon(
+                AeroButton(
+                  label: 'Загрузить копию',
+                  icon: Icons.file_upload_outlined,
+                  variant: AeroButtonVariant.ghost,
                   onPressed: () => _importBackup(context, provider),
-                  icon: const Icon(Icons.file_upload_outlined, size: 18),
-                  label: const Text('Загрузить копию'),
                 ),
-                OutlinedButton.icon(
+                AeroButton(
+                  label: 'Стереть всё',
+                  icon: Icons.delete_outline,
+                  variant: AeroButtonVariant.danger,
                   onPressed: () => _wipeAll(context, provider),
-                  style: OutlinedButton.styleFrom(foregroundColor: AppColors.red),
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Стереть всё'),
                 ),
               ],
             ),
