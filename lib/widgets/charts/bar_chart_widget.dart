@@ -8,8 +8,8 @@ class BarChartWidget extends StatelessWidget {
     super.key,
     required this.points,
     this.height = 200,
-    this.colorTop = const Color(0xFF2E97E5),
-    this.colorBottom = const Color(0xFF1F7FD1),
+    this.colorTop = AppColors.sky,
+    this.colorBottom = AppColors.aquaDeep,
     this.formatY,
   });
 
