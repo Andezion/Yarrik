@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../themes/app_colors.dart';
 import '../utils/color_utils.dart';
+import '../widgets/aero_button.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/session_card.dart';
 import 'create_workout_sheet.dart';
@@ -40,10 +41,10 @@ class _DiaryScreenState extends State<DiaryScreen> {
             Expanded(
               child: Text('Дневник тренировок', style: Theme.of(context).textTheme.headlineSmall),
             ),
-            ElevatedButton.icon(
+            AeroButton(
+              label: 'Записать',
+              icon: Icons.add,
               onPressed: () => openLogWorkoutSheet(context),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Записать'),
             ),
           ],
         ),
@@ -65,18 +66,20 @@ class _DiaryScreenState extends State<DiaryScreen> {
           runSpacing: 8,
           children: [
             for (var i = 0; i < provider.allWorkouts.length; i++)
-              _FilterChip(
+              AeroChip(
                 label: provider.allWorkouts[i].name.replaceFirst('Тренировка', 'Тр.'),
                 selected: _workoutFilter == i,
+                accentColor: colorFromHex(provider.allWorkouts[i].color),
                 onTap: () => setState(() => _workoutFilter = _workoutFilter == i ? null : i),
               ),
             for (final g in meta.groups)
-              _FilterChip(
+              AeroChip(
                 label: g.name,
                 selected: _groupFilter == g.id,
+                accentColor: colorFromHex(g.color),
                 onTap: () => setState(() => _groupFilter = _groupFilter == g.id ? '' : g.id),
               ),
-            _FilterChip(
+            AeroChip(
               label: '+ Тренировка',
               selected: false,
               onTap: () => openCreateWorkoutSheet(context),
@@ -124,38 +127,6 @@ class _DiaryScreenState extends State<DiaryScreen> {
                 ),
         ),
       ],
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(99),
-          color: selected ? colorFromHex('#C6EAFF').withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.7),
-          border: Border.all(color: selected ? AppColors.blue.withValues(alpha: 0.8) : AppColors.line2),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: selected ? const Color(0xFF0E5EA8) : AppColors.muted,
-          ),
-        ),
-      ),
     );
   }
 }
