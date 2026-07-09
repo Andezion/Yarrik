@@ -7,6 +7,8 @@ import '../themes/app_colors.dart';
 import '../themes/app_theme.dart';
 import '../utils/color_utils.dart';
 import '../utils/date_utils.dart';
+import '../widgets/aero_button.dart';
+import '../widgets/aero_sheet.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/session_card.dart';
 
@@ -78,8 +80,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                   Row(
                     children: [
-                      IconButton(onPressed: () => _shift(-1), icon: const Icon(Icons.chevron_left)),
-                      IconButton(onPressed: () => _shift(1), icon: const Icon(Icons.chevron_right)),
+                      AeroIconButton(icon: Icons.chevron_left, onTap: () => _shift(-1)),
+                      const SizedBox(width: 8),
+                      AeroIconButton(icon: Icons.chevron_right, onTap: () => _shift(1)),
                     ],
                   ),
                 ],
@@ -150,21 +153,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
         maxChildSize: 0.92,
         expand: false,
         builder: (context, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFFF3FAFF),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-          ),
-          padding: const EdgeInsets.all(18),
+          decoration: aeroSheetDecoration(),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
           child: ListView(
             controller: controller,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(fmtLong(date), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-                ],
-              ),
+              const SheetHandle(),
+              SheetHeader(title: fmtLong(date)),
               const SizedBox(height: 12),
               for (final s in sessions)
                 Padding(
@@ -195,12 +190,17 @@ class _DayCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: hasSessions ? Colors.white.withValues(alpha: 0.55) : Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+          color: hasSessions ? Colors.white.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.15),
           border: Border.all(
-            color: isToday ? AppColors.blue.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.6),
-            width: isToday ? 2 : 1,
+            color: isToday ? AppColors.aqua : Colors.white.withValues(alpha: 0.6),
+            width: isToday ? 2.4 : 1,
           ),
+          boxShadow: [
+            if (isToday) BoxShadow(color: AppColors.aqua.withValues(alpha: 0.4), blurRadius: 12),
+            if (hasSessions && !isToday)
+              BoxShadow(color: AppColors.blueDark.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 3)),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
