@@ -6,6 +6,7 @@ import '../providers/app_state_provider.dart';
 import '../themes/app_colors.dart';
 import '../utils/color_utils.dart';
 import '../utils/date_utils.dart';
+import '../widgets/aero_button.dart';
 import '../widgets/glass_card.dart';
 import 'create_exercise_sheet.dart';
 import 'exercise_detail_screen.dart';
@@ -25,10 +26,10 @@ class ExercisesScreen extends StatelessWidget {
             Expanded(
               child: Text('Упражнения', style: Theme.of(context).textTheme.headlineSmall),
             ),
-            ElevatedButton.icon(
+            AeroButton(
+              label: 'Добавить упражнение',
+              icon: Icons.add,
               onPressed: () => openCreateExerciseSheet(context),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Добавить упражнение'),
             ),
           ],
         ),
